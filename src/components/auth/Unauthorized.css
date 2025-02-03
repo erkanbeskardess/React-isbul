@@ -1,0 +1,35 @@
+.unauthorized-container {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(45deg, #ff6b6b, #ffd93d);
+}
+
+.unauthorized-content {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 40px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.unauthorized-content h1 {
+    color: #e74c3c;
+    margin-bottom: 20px;
+}
+
+.unauthorized-content button {
+    padding: 10px 20px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: all 0.3s ease;
+}
+
+.unauthorized-content button:hover {
+    background-color: #2980b9;
+} 

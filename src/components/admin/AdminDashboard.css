@@ -1,0 +1,64 @@
+.admin-container {
+    min-height: 100vh;
+    padding: 20px;
+    background: linear-gradient(45deg, #2c3e50, #3498db);
+}
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    margin-bottom: 30px;
+}
+
+.admin-header h1 {
+    color: white;
+    margin: 0;
+}
+
+.logout-button {
+    padding: 10px 20px;
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.logout-button:hover {
+    background-color: #c0392b;
+}
+
+.admin-menu {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    padding: 20px;
+}
+
+.menu-card {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.menu-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.menu-card h3 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.menu-card p {
+    color: #7f8c8d;
+    margin: 0;
+} 

@@ -1,0 +1,162 @@
+.applications-container {
+    min-height: 100vh;
+    padding: 20px;
+    background: linear-gradient(45deg, #ff6b6b, #ffd93d);
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    margin-bottom: 30px;
+}
+
+.header h1 {
+    color: white;
+    margin: 0;
+}
+
+.back-button {
+    padding: 10px 20px;
+    background-color: rgba(255, 255, 255, 0.9);
+    color: #ff6b6b;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.code-checker {
+    max-width: 600px;
+    margin: 0 auto 30px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 10px;
+}
+
+.input-group {
+    display: flex;
+    gap: 10px;
+}
+
+.input-group input {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+.input-group button {
+    padding: 12px 24px;
+    background-color: #2ecc71;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.input-group button:hover {
+    background-color: #27ae60;
+}
+
+.error-message {
+    color: #e74c3c;
+    margin-top: 10px;
+    text-align: center;
+}
+
+.application-details {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 30px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 10px;
+}
+
+.application-header {
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.application-header h2 {
+    margin: 0;
+    color: #2c3e50;
+}
+
+.company-name {
+    display: block;
+    color: #7f8c8d;
+    margin: 5px 0;
+}
+
+.application-id {
+    color: #95a5a6;
+    font-size: 0.9em;
+}
+
+.status-section h3 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+}
+
+.status {
+    color: #e67e22;
+    font-weight: normal;
+}
+
+.progress-timeline {
+    position: relative;
+    padding: 20px 0;
+}
+
+.progress-timeline::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #ddd;
+}
+
+.stage {
+    position: relative;
+    margin-bottom: 30px;
+    padding-left: 50px;
+}
+
+.stage-dot {
+    position: absolute;
+    left: 8px;
+    width: 16px;
+    height: 16px;
+    background: #ddd;
+    border-radius: 50%;
+}
+
+.stage.completed .stage-dot {
+    background: #2ecc71;
+}
+
+.stage-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.stage-name {
+    color: #2c3e50;
+    font-weight: bold;
+}
+
+.stage-date {
+    color: #7f8c8d;
+    font-size: 0.9em;
+} 
