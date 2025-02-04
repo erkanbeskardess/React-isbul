@@ -1,361 +1,334 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './ApplicationManagement.css';
 
 const ApplicationManagement = () => {
     const navigate = useNavigate();
-    const [selectedJob, setSelectedJob] = useState(null);
+    const [applications, setApplications] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [showDetailModal, setShowDetailModal] = useState(false);
     const [selectedApplication, setSelectedApplication] = useState(null);
-    const [showCVModal, setShowCVModal] = useState(false);
-    const [editingNotes, setEditingNotes] = useState({});
-    const [tempNotes, setTempNotes] = useState({});
-    const [tempStatus, setTempStatus] = useState({});
-    const [hasChanges, setHasChanges] = useState({});
-    const [activeTab, setActiveTab] = useState('cv');
+    const [tempStatus, setTempStatus] = useState('');
+    const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+    const [successMessage, setSuccessMessage] = useState('');
 
-    // jobs state'ini düzelttik
-    const [jobs, setJobs] = useState([
-        {
-            id: 1,
-            title: "Senior Frontend Developer",
-            company: "Tech Corp",
-            location: "İstanbul",
-            publishedDate: "2024-02-01",
-            applications: [
-                {
-                    id: 1,
-                    applicant: "Ahmet Yılmaz",
-                    applicationDate: "2024-02-15",
-                    status: "pending",
-                    cv: "cv_url_1",
-                    notes: "",
-                    email: "ahmet@email.com",
-                    phone: "555-0001"
-                },
-                {
-                    id: 2,
-                    applicant: "Mehmet Demir",
-                    applicationDate: "2024-02-16",
-                    status: "interviewing",
-                    cv: "cv_url_2",
-                    notes: "İlk görüşme olumlu",
-                    email: "mehmet@email.com",
-                    phone: "555-0002"
+    const fetchUserDetails = async (userId) => {
+        try {
+            const response = await fetch(`http://localhost:8080/api/users/${userId}`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'Content-Type': 'application/json'
                 }
-            ]
-        },
-        {
-            id: 2,
-            title: "Backend Developer",
-            company: "Software Inc",
-            location: "Ankara",
-            publishedDate: "2024-02-02",
-            applications: [
-                {
-                    id: 3,
-                    applicant: "Ayşe Kara",
-                    applicationDate: "2024-02-17",
-                    status: "accepted",
-                    cv: "cv_url_3",
-                    notes: "Tüm görüşmeler tamamlandı",
-                    email: "ayse@email.com",
-                    phone: "555-0003"
-                }
-            ]
-        }
-    ]);
+            });
 
-    const statusOptions = {
-        pending: { text: "Beklemede", color: "#f1c40f" },
-        interviewing: { text: "Görüşme Sürecinde", color: "#3498db" },
-        accepted: { text: "Kabul Edildi", color: "#2ecc71" },
-        rejected: { text: "Reddedildi", color: "#e74c3c" }
-    };
+            if (!response.ok) {
+                throw new Error('Kullanıcı bilgileri alınamadı');
+            }
 
-    const handleStatusChange = (applicationId, newStatus) => {
-        setTempStatus(prev => ({ ...prev, [applicationId]: newStatus }));
-        setHasChanges(prev => ({ ...prev, [applicationId]: true }));
-    };
-
-    const handleEditNotes = (applicationId) => {
-        setEditingNotes(prev => ({ ...prev, [applicationId]: true }));
-        if (!tempNotes[applicationId]) {
-            setTempNotes(prev => ({ 
-                ...prev, 
-                [applicationId]: jobs.find(job => job.applications.some(app => app.id === applicationId)).applications.find(app => app.id === applicationId).notes 
-            }));
-        }
-        if (!tempStatus[applicationId]) {
-            setTempStatus(prev => ({ 
-                ...prev, 
-                [applicationId]: jobs.find(job => job.applications.some(app => app.id === applicationId)).applications.find(app => app.id === applicationId).status 
-            }));
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Kullanıcı bilgileri alınırken hata:', error);
+            return null;
         }
     };
 
-    const handleNotesChange = (applicationId, newNotes) => {
-        setTempNotes(prev => ({ ...prev, [applicationId]: newNotes }));
-        setHasChanges(prev => ({ ...prev, [applicationId]: true }));
-    };
-
-    const handleSaveChanges = (applicationId) => {
-        const currentJob = jobs.find(job => job.applications.some(app => app.id === applicationId));
-        const updatedApplications = currentJob.applications.map(app => 
-            app.id === applicationId 
-                ? { 
-                    ...app, 
-                    notes: tempNotes[applicationId] || app.notes,
-                    status: tempStatus[applicationId] || app.status
+    const fetchApplications = useCallback(async () => {
+        try {
+            const response = await fetch(`http://localhost:8080/hr/applications`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'Content-Type': 'application/json',
+                    'method': 'GET'
                 }
-                : app
-        );
-        
-        setJobs(jobs.map(job => 
-            job.id === currentJob.id 
-                ? { ...job, applications: updatedApplications } 
-                : job
-        ));
-        
-        setEditingNotes(prev => ({ ...prev, [applicationId]: false }));
-        setHasChanges(prev => ({ ...prev, [applicationId]: false }));
-    };
+            });
 
-    const handleCancelEdit = (applicationId) => {
-        const job = jobs.find(job => job.applications.some(app => app.id === applicationId));
-        const originalApp = job.applications.find(app => app.id === applicationId);
-        setEditingNotes(prev => ({ ...prev, [applicationId]: false }));
-        setTempNotes(prev => ({ ...prev, [applicationId]: originalApp.notes }));
-        setTempStatus(prev => ({ ...prev, [applicationId]: originalApp.status }));
-        setHasChanges(prev => ({ ...prev, [applicationId]: false }));
-    };
+            if (!response.ok) {
+                throw new Error('Başvurular yüklenirken hata oluştu');
+            }
 
-    const handleViewCV = (application) => {
-        setSelectedApplication(application);
-        setShowCVModal(true);
-    };
-
-    // İlan listesi görünümü
-    const renderJobsList = () => (
-        <div className="jobs-list">
-            {jobs.map(job => (
-                <div key={job.id} className="job-card" onClick={() => setSelectedJob(job)}>
-                    <div className="job-header">
-                        <h3>{job.title}</h3>
-                        <span className="applications-count">
-                            {job.applications.length} Başvuru
-                        </span>
-                    </div>
-                    <div className="job-info">
-                        <div className="info-item">
-                            <span className="label">Şirket:</span>
-                            <span>{job.company}</span>
-                        </div>
-                        <div className="info-item">
-                            <span className="label">Lokasyon:</span>
-                            <span>{job.location}</span>
-                        </div>
-                        <div className="info-item">
-                            <span className="label">Yayın Tarihi:</span>
-                            <span>{job.publishedDate}</span>
-                        </div>
-                    </div>
-                    <div className="status-summary">
-                        {Object.entries(statusOptions).map(([status, { text, color }]) => {
-                            const count = job.applications.filter(app => app.status === status).length;
-                            if (count > 0) {
-                                return (
-                                    <div key={status} className="status-badge" style={{ backgroundColor: color }}>
-                                        {text}: {count}
-                                    </div>
-                                );
-                            }
-                            return null;
-                        })}
-                    </div>
-                </div>
-            ))}
-        </div>
-    );
-
-    // Başvuru listesi görünümü
-    const renderApplicationsList = () => (
-        <>
-            <div className="header">
-                <button className="back-button" onClick={() => setSelectedJob(null)}>
-                    ← İlanlara Dön
-                </button>
-                <h2>{selectedJob.title} - Başvurular</h2>
-            </div>
-            <div className="applications-list">
-                {selectedJob.applications.map(application => (
-                    <div key={application.id} className="application-card">
-                        <div className="application-header">
-                            <h3>{application.applicant}</h3>
-                            <div className="status-badge" style={{ backgroundColor: statusOptions[application.status].color }}>
-                                {statusOptions[application.status].text}
-                            </div>
-                        </div>
-                        <div className="application-info">
-                            <div className="info-group">
-                                <span className="label">E-posta:</span>
-                                <span>{application.email}</span>
-                            </div>
-                            <div className="info-group">
-                                <span className="label">Telefon:</span>
-                                <span>{application.phone}</span>
-                            </div>
-                            <div className="info-group">
-                                <span className="label">Başvuru Tarihi:</span>
-                                <span>{application.applicationDate}</span>
-                            </div>
-                        </div>
-                        <div className="application-actions">
-                            <button 
-                                className="view-details-button"
-                                onClick={() => setSelectedApplication(application)}
-                            >
-                                Detayları Görüntüle
-                            </button>
-                        </div>
-                    </div>
-                ))}
-            </div>
-        </>
-    );
-
-    // Başvuru detay görünümü
-    const renderApplicationDetail = () => (
-        <>
-            <div className="header">
-                <button className="back-button" onClick={() => setSelectedApplication(null)}>
-                    ← Başvurulara Dön
-                </button>
-                <h2>{selectedApplication.applicant} - Başvuru Detayı</h2>
-            </div>
+            const data = await response.json();
             
-            <div className="application-detail-container">
-                <div className="applicant-basic-info">
-                    <div className="info-group">
-                        <span className="label">E-posta:</span>
-                        <span>{selectedApplication.email}</span>
-                    </div>
-                    <div className="info-group">
-                        <span className="label">Telefon:</span>
-                        <span>{selectedApplication.phone}</span>
-                    </div>
-                    <div className="info-group">
-                        <span className="label">Başvuru Tarihi:</span>
-                        <span>{selectedApplication.applicationDate}</span>
-                    </div>
-                </div>
+            const applicationsWithUsers = await Promise.all(
+                data.map(async (application) => {
+                    const userDetail = await fetchUserDetails(application.userId);
+                    return {
+                        ...application,
+                        userDetail
+                    };
+                })
+            );
+            
+            setApplications(applicationsWithUsers);
+            setLoading(false);
+        } catch (error) {
+            console.error('Başvurular yüklenirken hata:', error);
+            setLoading(false);
+        }
+    }, []);
 
-                <div className="detail-content">
-                    <div className="cv-section">
-                        <h3>CV</h3>
-                        <div className="cv-preview">
-                            {/* Burada CV görüntüleyici komponenti kullanılacak */}
-                            CV İçeriği
-                        </div>
-                    </div>
+    useEffect(() => {
+        fetchApplications();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
-                    <div className="process-section">
-                        <h3>Süreç Yönetimi</h3>
-                        <div className="notes-section">
-                            <div className="notes-header">
-                                <span className="label">Notlar:</span>
-                                {!editingNotes[selectedApplication.id] && (
-                                    <button 
-                                        className="edit-notes-button"
-                                        onClick={() => handleEditNotes(selectedApplication.id)}
-                                    >
-                                        Düzenle
-                                    </button>
-                                )}
-                            </div>
-                            {editingNotes[selectedApplication.id] ? (
-                                <textarea
-                                    value={tempNotes[selectedApplication.id] || ''}
-                                    onChange={(e) => handleNotesChange(selectedApplication.id, e.target.value)}
-                                    placeholder="Not ekleyin..."
-                                    className="notes-textarea"
-                                    rows="3"
-                                />
-                            ) : (
-                                <p>{selectedApplication.notes || 'Not eklenmemiş'}</p>
-                            )}
-                        </div>
+    const handleViewDetail = async (application) => {
+        try {
+            // CV bilgilerini getir
+            const cvResponse = await fetch(`http://localhost:8080/applicant/cv-documents/${application.cvId}`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
 
-                        <div className="status-section">
-                            <span className="label">Başvuru Durumu:</span>
-                            <select 
-                                value={tempStatus[selectedApplication.id] || selectedApplication.status}
-                                onChange={(e) => handleStatusChange(selectedApplication.id, e.target.value)}
-                                className="status-select"
-                                disabled={!editingNotes[selectedApplication.id]}
-                            >
-                                {Object.entries(statusOptions).map(([value, { text }]) => (
-                                    <option key={value} value={value}>
-                                        {text}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
+            if (!cvResponse.ok) {
+                throw new Error('CV bilgileri alınamadı');
+            }
 
-                        {editingNotes[selectedApplication.id] && (
-                            <div className="edit-actions">
-                                <button 
-                                    className="save-button"
-                                    onClick={() => handleSaveChanges(selectedApplication.id)}
-                                    disabled={!hasChanges[selectedApplication.id]}
-                                >
-                                    Değişiklikleri Kaydet
-                                </button>
-                                <button 
-                                    className="cancel-button"
-                                    onClick={() => handleCancelEdit(selectedApplication.id)}
-                                >
-                                    İptal
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </div>
-        </>
-    );
+            const cvDocument = await cvResponse.json();
+            
+            // Başvuru bilgilerini güncelle ve CV bilgilerini ekle
+            setSelectedApplication({
+                ...application,
+                cvDocument: cvDocument
+            });
+            
+            setTempStatus(application.applicationStatusType);
+            setShowDetailModal(true);
+
+        } catch (error) {
+            console.error('CV bilgileri alınırken hata:', error);
+            // CV bilgileri alınamazsa da modalı göster ama CV kısmı boş olacak
+            setSelectedApplication(application);
+            setTempStatus(application.applicationStatusType);
+            setShowDetailModal(true);
+        }
+    };
+
+    const handleViewCV = async (cvId) => {
+        try {
+            // Önce dosya bilgilerini al
+            const response = await fetch(`http://localhost:8080/applicant/cv-documents/${cvId}`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('CV yüklenirken hata oluştu');
+            }
+
+            const cvData = await response.json();
+            
+            if (cvData.fileUrl) {
+                // Ters eğik çizgileri düz çizgiye çevir
+                const normalizedPath = cvData.fileUrl.replace(/\\/g, '/');
+                const fullPath = `file:///C:/Users/erkan/Desktop/isbulB/isbul/${normalizedPath}`;
+                window.open(fullPath, '_blank');
+
+            } else {
+                throw new Error('CV dosyası bulunamadı');
+            }
+
+        } catch (error) {
+            console.error('CV görüntüleme hatası:', error);
+            alert('CV görüntülenirken bir hata oluştu');
+        }
+    };
+
+    const handleStatusChange = async (applicationId) => {
+        try {
+            const response = await fetch(`http://localhost:8080/hr/applications/status/${applicationId}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(tempStatus)
+            });
+
+            if (!response.ok) {
+                throw new Error('Durum güncellenirken hata oluştu');
+            }
+
+            const message = await response.text();
+            setSuccessMessage(message);
+            setShowSuccessMessage(true);
+            setShowDetailModal(false);
+            
+            // 2 saniye sonra mesajı kapat ve yönlendir
+            setTimeout(() => {
+                setShowSuccessMessage(false);
+                fetchApplications();
+                navigate('/hr/applications');
+            }, 2000);
+
+        } catch (error) {
+            console.error('Durum güncelleme hatası:', error);
+            alert('Durum güncellenirken bir hata oluştu');
+        }
+    };
 
     return (
         <div className="application-management-container">
             <div className="header">
-                {!selectedJob && (
-                    <>
-                        <button className="back-button" onClick={() => navigate('/homepage')}>
-                            ← Ana Sayfa
-                        </button>
-                        <h1>İş İlanları ve Başvurular</h1>
-                    </>
-                )}
+                <button className="back-button" onClick={() => navigate('/homepage')}>
+                    ← Ana Sayfa
+                </button>
+                <h1>Başvuru Yönetimi</h1>
             </div>
 
-            {!selectedJob && renderJobsList()}
-            {selectedJob && !selectedApplication && renderApplicationsList()}
-            {selectedApplication && renderApplicationDetail()}
+            {loading ? (
+                <div className="loading">Başvurular yükleniyor...</div>
+            ) : applications.length === 0 ? (
+                <div className="no-applications">Henüz başvuru bulunmamaktadır.</div>
+            ) : (
+                <div className="applications-list">
+                    {applications.map(application => (
+                        <div key={application.id} className="application-card">
+                            <div className="application-header">
+                                <h3>{application.jobPosting.title}</h3>
+                            </div>
+                            
+                            <div className="applicant-info">
+                                <div className="info-group">
+                                    <span className="label">Şirket:</span>
+                                    <span>{application.jobPosting.company}</span>
+                                </div>
+                                <div className="info-group">
+                                    <span className="label">Lokasyon:</span>
+                                    <span>{application.jobPosting.location}</span>
+                                </div>
+                                <div className="info-group">
+                                    <span className="label">Başvuru Tarihi:</span>
+                                    <span>{new Date(application.systemCreatedDate).toLocaleDateString()}</span>
+                                </div>
+                                <div className="info-group">
+                                    <span className="label">Başvuru Kodu:</span>
+                                    <span>{application.randomCode}</span>
+                                </div>
+                            </div>
 
-            {/* CV Modal */}
-            {showCVModal && selectedApplication && (
-                <div className="modal-overlay">
-                    <div className="modal">
-                        <div className="modal-header">
-                            <h2>{selectedApplication.applicant} - CV</h2>
-                            <button className="close-button" onClick={() => setShowCVModal(false)}>
-                                ×
-                            </button>
-                        </div>
-                        <div className="modal-content">
-                            <div className="cv-preview">
-                                CV Önizleme
+                            <div className="application-footer">
+                                <button 
+                                    className="view-detail-button"
+                                    onClick={() => handleViewDetail(application)}
+                                >
+                                    Detayları Görüntüle
+                                </button>
+                                <div className={`status-badge ${application.applicationStatusType.toLowerCase()}`}>
+                                    {application.applicationStatusType === 'PENDING' && 'Beklemede'}
+                                    {application.applicationStatusType === 'APPROVED' && 'Kabul Edildi'}
+                                    {application.applicationStatusType === 'REJECTED' && 'Reddedildi'}
+                                </div>
                             </div>
                         </div>
+                    ))}
+                </div>
+            )}
+
+            {showDetailModal && selectedApplication && (
+                <div className="modal-overlay">
+                    <div className="modal detail-modal">
+                        <div className="modal-header">
+                            <h2>{selectedApplication.jobPosting.title}</h2>
+                            <button className="close-button" onClick={() => setShowDetailModal(false)}>×</button>
+                        </div>
+                        <div className="modal-content">
+                            <div className="detail-section">
+                                <h3>Başvuran Bilgileri</h3>
+                                <div className="detail-info">
+                                    {selectedApplication.userDetail && (
+                                        <>
+                                            <p><strong>Ad Soyad:</strong> {`${selectedApplication.userDetail.firstName} ${selectedApplication.userDetail.lastName}`}</p>
+                                            <p><strong>E-posta:</strong> {selectedApplication.userDetail.email}</p>
+                                            <p><strong>Telefon:</strong> {selectedApplication.userDetail.phone}</p>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="detail-section">
+                                <h3>Başvuru Detayları</h3>
+                                <div className="detail-info">
+                                    <p><strong>Şirket:</strong> {selectedApplication.jobPosting.company}</p>
+                                    <p><strong>Lokasyon:</strong> {selectedApplication.jobPosting.location}</p>
+                                    <p><strong>Başvuru Tarihi:</strong> {new Date(selectedApplication.systemCreatedDate).toLocaleDateString()}</p>
+                                    <p><strong>Durum:</strong> {selectedApplication.applicationStatusType}</p>
+                                    <p><strong>Başvuru Kodu:</strong> {selectedApplication.randomCode}</p>
+                                </div>
+                            </div>
+
+                            <div className="cv-section">
+                                <h3>CV</h3>
+                                <div className="cv-info">
+                                    {selectedApplication.cvDocument ? (
+                                        <>
+                                            <div className="cv-details">
+                                                <p><strong>Dosya Adı:</strong> {selectedApplication.cvDocument.fileName}</p>
+                                                <p><strong>Dosya Türü:</strong> {selectedApplication.cvDocument.fileType}</p>
+                                            </div>
+                                            <button 
+                                                className="view-cv-button"
+                                                onClick={() => handleViewCV(selectedApplication.cvId)}
+                                            >
+                                                <i className="fas fa-file-pdf"></i>
+                                                CV'yi Görüntüle
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <p className="no-cv">CV bulunamadı</p>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="status-section">
+                                <h3>Başvuru Durumu</h3>
+                                <div className="status-edit">
+                                    <div className="status-row">
+                                        <select 
+                                            value={tempStatus}
+                                            onChange={(e) => setTempStatus(e.target.value)}
+                                            className="status-select"
+                                        >
+                                            <option value="PENDING">Beklemede</option>
+                                            <option value="APPROVED">Kabul Edildi</option>
+                                            <option value="REJECTED">Reddedildi</option>
+                                        </select>
+                                        
+                                        {tempStatus !== selectedApplication.applicationStatusType && (
+                                            <div className="status-actions">
+                                                <button 
+                                                    className="save-button"
+                                                    onClick={() => handleStatusChange(selectedApplication.id)}
+                                                >
+                                                    Kaydet
+                                                </button>
+                                                <button 
+                                                    className="cancel-button"
+                                                    onClick={() => {
+                                                        setTempStatus(selectedApplication.applicationStatusType);
+                                                    }}
+                                                >
+                                                    İptal
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showSuccessMessage && (
+                <div className="success-message-overlay">
+                    <div className="success-message-modal">
+                        <div className="success-icon">
+                            <i className="fas fa-check-circle"></i>
+                        </div>
+                        <p>{successMessage}</p>
                     </div>
                 </div>
             )}
