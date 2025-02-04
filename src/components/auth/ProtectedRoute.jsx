@@ -3,7 +3,7 @@ import { ROLES } from '../../utils/roles.js';
 
 const ProtectedRoute = ({ children, allowedRoles = [ROLES.ADMIN] }) => {
     const token = localStorage.getItem('token');
-    const userRole = localStorage.getItem('role'); // 'userRole' yerine 'role' kullanıyoruz
+    const userRole = localStorage.getItem('role'); 
     
     console.log('Current Role:', userRole); // Debug için
     console.log('Allowed Roles:', allowedRoles); // Debug için
@@ -13,7 +13,6 @@ const ProtectedRoute = ({ children, allowedRoles = [ROLES.ADMIN] }) => {
     }
 
     if (allowedRoles && !allowedRoles.includes(userRole)) {
-        // Kullanıcının rolü sayfaya erişim için uygun değilse
         return <Navigate to="/unauthorized" replace />;
     }
 

@@ -43,16 +43,20 @@ const LoginSignup = () => {
 
             const data = await response.json();
             localStorage.setItem('token', data.token);
-            localStorage.setItem('role', data.role);
-            localStorage.setItem('userNames', data.firstName+data.lastName);
+            localStorage.setItem('userNames', data.user.firstName+data.user.lastName);
+            localStorage.setItem('role', data.user.role);
+            localStorage.setItem('userId', data.user.id);
 
-            if (data.role === ROLES.ADMIN) {
+
+
+            if (data.user.role === ROLES.ADMIN) {
                 navigate('/admin');
-            } else if (data.role === ROLES.HR) {
+            } else if (data.user.role === ROLES.HR) {
                 navigate('/homepage');
-            } else if (data.role === ROLES.APPLICANT) {
+            } else if (data.user.role === ROLES.APPLICANT) {
                 navigate('/homepage');
             }
+
 
         } catch (error) {
             console.error('Login error:', error);
