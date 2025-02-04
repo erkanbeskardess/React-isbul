@@ -6,7 +6,6 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 import Unauthorized from './components/auth/Unauthorized';
 import AdminDashboard from './components/admin/AdminDashboard';
 import UserManagement from './components/admin/UserManagement';
-import SystemSettings from './components/admin/SystemSettings';
 import Applications from './components/applicant/Applications';
 import Jobs from './components/applicant/Jobs';
 import CV from './components/applicant/CV';
@@ -36,14 +35,6 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
               <UserManagement />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/admin/settings" 
-          element={
-            <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
-              <SystemSettings />
             </ProtectedRoute>
           } 
         />

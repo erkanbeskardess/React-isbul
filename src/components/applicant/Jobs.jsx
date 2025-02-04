@@ -98,10 +98,7 @@ const Jobs = () => {
                 throw new Error(errorData.message || 'Başvuru başarısız');
             }
 
-            const result = await response.json();
-            console.log("Application Code:", result); // Gelen veriyi kontrol edelim
-            
-            // String'e çevirip setApplicationCode'a gönderelim
+            const result = await response.json();            
             const codeString = result.toString();
             setApplicationCode(codeString);
             
