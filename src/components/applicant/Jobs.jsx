@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useUser } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Jobs.css';
-import LoginSignup from '../login/LoginSignup';
+
 
 const Jobs = () => {
     const navigate = useNavigate();
@@ -75,9 +75,11 @@ const Jobs = () => {
         }
 
         try {
+            const userId = localStorage.getItem('userId');
+           
             const applicationData = {
                 jobPosting: selectedJob,
-                user: useUser,
+                userId: userId,
                 applicationStatusType: "PENDING",
                 cvId: selectedCVId
             };
@@ -97,9 +99,12 @@ const Jobs = () => {
             }
 
             const result = await response.json();
+            console.log("Application Code:", result); // Gelen veriyi kontrol edelim
             
-            // Başvuru başarılı olduktan sonra
-            setApplicationCode(result);
+            // String'e çevirip setApplicationCode'a gönderelim
+            const codeString = result.toString();
+            setApplicationCode(codeString);
+            
             setShowApplyModal(false);
             setShowSuccessModal(true);
             setSelectedCVId(null);
@@ -273,19 +278,30 @@ const Jobs = () => {
                 <div className="modal-overlay">
                     <div className="modal success-modal">
                         <div className="modal-header">
-                            <h2>Başvurunuz Alındı!</h2>
+                            <h2>{applicationCode.length === 7 ? 'Mevcut Başvuru' : 'Başvurunuz Alındı!'}</h2>
                             <button className="close-button" onClick={() => setShowSuccessModal(false)}>×</button>
                         </div>
                         <div className="modal-content">
                             <div className="success-message">
-                                <div className="success-icon">
-                                    <i className="fas fa-check-circle"></i>
-                                </div>
-                                <p>Başvurunuz başarıyla tamamlandı.</p>
+                                {applicationCode.length === 7 ? (
+                                    <>
+                                        <div className="info-icon">
+                                            <i className="fas fa-info-circle"></i>
+                                        </div>
+                                        <p>Başvurunuz sistemde mevcut, başvuru kontrolü sayfasında kodunuz ile süreci takip edebilirsiniz.</p>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="success-icon">
+                                            <i className="fas fa-check-circle"></i>
+                                        </div>
+                                        <p>Başvurunuz başarıyla tamamlandı.</p>
+                                    </>
+                                )}
                                 <div className="application-code-section">
                                     <h3>Başvuru Takip Kodunuz:</h3>
                                     <div className="code-display">
-                                        {applicationCode}
+                                        {applicationCode.substring(0, 6)}
                                     </div>
                                     <div className="code-info">
                                         <i className="fas fa-info-circle"></i>
@@ -298,7 +314,7 @@ const Jobs = () => {
                                     className="submit-button"
                                     onClick={() => {
                                         setShowSuccessModal(false);
-                                        navigate('/applications'); // İsteğe bağlı: Başvurular sayfasına yönlendir
+                                        navigate('/applications');
                                     }}
                                 >
                                     Tamam
